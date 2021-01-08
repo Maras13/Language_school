@@ -1,6 +1,6 @@
 # This is the lambda code that will accept JSON from API Gateway 
 # and add the users into the DynamoDB Table specified by TABLE_NAME
-#
+
 import json
 import boto3
 
