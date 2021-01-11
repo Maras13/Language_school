@@ -9,7 +9,8 @@ dynamo_table = boto3.resource('dynamodb').Table('EmailAddresses')
 dynamo = boto3.client('dynamodb')
 
 def lambda_handler(event, context):
-    
+
+    event = event['queryStringParameters']
     if exists(event['email']):
         # Update item
         response = dynamo_table.update_item(
@@ -23,7 +24,10 @@ def lambda_handler(event, context):
     else:
         # Insert item
         response = dynamo_table.put_item(Item=event)
-    return response
+    return {
+        "statusCode": 200,
+        "body": json.dumps(response)
+    }
 
 def exists(name):
     response = dynamo.get_item(
