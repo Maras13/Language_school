@@ -1,7 +1,8 @@
 # Local .terraform directories
-**/.terraform/*
-**/.terraform*
+infra/**/.terraform/*
+infra/**/.terraform*
+infra/*.tfstate
+infra/*.tfstate.*
 
-# .tfstate files
-*.tfstate
-*.tfstate.*
+lib/addressHandlerLambda.zip
+
