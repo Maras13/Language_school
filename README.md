@@ -12,4 +12,5 @@ Design Doc: https://docs.google.com/document/d/13pL-B0ZmRjCw4SB9aJ3YBhiBD4HBVMIS
 
 ## Setup
 `cd infra`
-`terraform apply`
+`python3 -m pip install -r requirements.txt`
+`python create.py`

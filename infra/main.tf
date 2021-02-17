@@ -67,8 +67,8 @@ output "NateBotUserSecret" {
 }
 
 ### Lambda: Address Handler ###
-resource "aws_iam_role" "NateBotAddressHandlerDDBRole" {
-  name = "NateBotAddressHandlerDDBRole"
+resource "aws_iam_role" "NateBotAddressHandlerRole" {
+  name = "NateBotAddressHandlerRole"
 
   assume_role_policy = <<EOF
 {
@@ -87,14 +87,19 @@ resource "aws_iam_role" "NateBotAddressHandlerDDBRole" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "NateBotAddressHandlerDDBRoleAttach1" {
-  role       = aws_iam_role.NateBotAddressHandlerDDBRole.name
+resource "aws_iam_role_policy_attachment" "NateBotAddressHandlerRoleAttach1" {
+  role       = aws_iam_role.NateBotAddressHandlerRole.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
 }
 
-resource "aws_iam_role_policy_attachment" "NateBotAddressHandlerDDBRoleAttach2" {
-  role       = aws_iam_role.NateBotAddressHandlerDDBRole.name
+resource "aws_iam_role_policy_attachment" "NateBotAddressHandlerRoleAttach2" {
+  role       = aws_iam_role.NateBotAddressHandlerRole.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "NateBotAddressHandlerRoleAttach3" {
+  role       = aws_iam_role.NateBotAddressHandlerRole.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSESFullAccess"
 }
 
 data "archive_file" "NateBotAddressHandlerZip" {
@@ -106,7 +111,7 @@ data "archive_file" "NateBotAddressHandlerZip" {
 resource "aws_lambda_function" "NateBotAddressHandler" {
   filename      = data.archive_file.NateBotAddressHandlerZip.output_path
   function_name = "NateBotAddressHandler"
-  role          = aws_iam_role.NateBotAddressHandlerDDBRole.arn
+  role          = aws_iam_role.NateBotAddressHandlerRole.arn
   handler       = "addressHandlerLambda.lambda_handler"
   source_code_hash = data.archive_file.NateBotAddressHandlerZip.output_base64sha256
   runtime = "python3.8"
@@ -172,8 +177,8 @@ output "NateBotApiURL" {
 }
 
 ### Lambda: Email Sender ###
-resource "aws_iam_role" "NateBotEmailSenderDDBRole" {
-  name = "NateBotEmailSenderDDBRole"
+resource "aws_iam_role" "NateBotEmailSenderRole" {
+  name = "NateBotEmailSenderRole"
 
   assume_role_policy = <<EOF
 {
@@ -192,13 +197,13 @@ resource "aws_iam_role" "NateBotEmailSenderDDBRole" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "NateBotEmailSenderDDBRoleAttach1" {
-  role       = aws_iam_role.NateBotEmailSenderDDBRole.name
+resource "aws_iam_role_policy_attachment" "NateBotEmailSenderRoleAttach1" {
+  role       = aws_iam_role.NateBotEmailSenderRole.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
 }
 
-resource "aws_iam_role_policy_attachment" "NateBotEmailSenderDDBRoleAttach2" {
-  role       = aws_iam_role.NateBotEmailSenderDDBRole.name
+resource "aws_iam_role_policy_attachment" "NateBotEmailSenderRoleAttach2" {
+  role       = aws_iam_role.NateBotEmailSenderRole.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
@@ -211,7 +216,7 @@ data "archive_file" "NateBotEmailSenderZip" {
 resource "aws_lambda_function" "NateBotEmailSender" {
   filename      = data.archive_file.NateBotEmailSenderZip.output_path
   function_name = "NateBotEmailSender"
-  role          = aws_iam_role.NateBotEmailSenderDDBRole.arn
+  role          = aws_iam_role.NateBotEmailSenderRole.arn
   handler       = "emailSenderLambda.lambda_handler"
   source_code_hash = data.archive_file.NateBotEmailSenderZip.output_base64sha256
   runtime = "python3.8"
@@ -235,4 +240,9 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_email_handler" {
     function_name = aws_lambda_function.NateBotEmailSender.function_name
     principal = "events.amazonaws.com"
     source_arn = aws_cloudwatch_event_rule.every_hour.arn
+}
+
+### Lambda: Email Sender ###
+resource "aws_ses_email_identity" "from_email" {
+  email = "chancebair@gmail.com"
 }

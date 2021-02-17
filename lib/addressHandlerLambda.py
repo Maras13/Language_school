@@ -4,9 +4,10 @@
 import json
 import boto3
 
-TABLE_NAME = 'EmailAddresses'
-dynamo_table = boto3.resource('dynamodb').Table('EmailAddresses')
+TABLE_NAME = 'NatebotEmailTable'
+dynamo_table = boto3.resource('dynamodb').Table('NatebotEmailTable')
 dynamo = boto3.client('dynamodb')
+ses = boto3.client('ses')
 
 def lambda_handler(event, context):
 
@@ -15,19 +16,25 @@ def lambda_handler(event, context):
         event = validate_input(event)
 
         # Update item "days" field in DDB if exist already
-        if exists(event['email']):
+        if exists(event['Email']):
             
             response = dynamo_table.update_item(
-                Key={'email': event['email']},
+                Key={'Email': event['Email']},
                 UpdateExpression="set days = :d",
                 ExpressionAttributeValues={
                     ':d': event['days']
                 },
                 ReturnValues="UPDATED_NEW"
             )
-        # Otherwise insert item into DDB table
+        # Otherwise insert item into DDB table, SES, and send verification email
         else:
+            # TODO: Move this to some Cloudwatch logging, return something useful
             response = dynamo_table.put_item(Item=event)
+
+            response = ses.send_custom_verification_email(
+                EmailAddress=event['Email'],
+                TemplateName='VerificationTemplate'
+            )
         return {
             "statusCode": 200,
             "body": json.dumps(response)
@@ -41,7 +48,7 @@ def lambda_handler(event, context):
 def exists(name):
     response = dynamo.get_item(
         Key={
-            'email': {
+            'Email': {
                 'S': name,
             },
         },
@@ -56,12 +63,15 @@ def exists(name):
 # 1. Both email and days are provided
 # 2. The values provided are strings
 def validate_input(event):
+    if event["queryStringParameters"] == None:
+        raise Exception("ERROR: {}".format("No Arguments passed! Please pass required arguments 'Email' and 'Days'"))
+
     event = event['queryStringParameters']
 
-    if "email" not in event or "days" not in event:
-        raise Exception("ERROR: {}".format("You must pass both 'email' and 'days'"))
+    if "Email" not in event or "Days" not in event:
+        raise Exception("ERROR: {}".format("Please pass required arguments 'Email' and 'Days'"))
 
-    if not isinstance(event["email"], str) or not isinstance(event["days"], str):
-        raise Exception("ERROR: {}".format("Value of 'email' and 'days' must be type: String"))
+    if not isinstance(event["Email"], str) or not isinstance(event["Days"], str):
+        raise Exception("ERROR: {}".format("Value of 'Email' and 'Days' must be type: String"))
 
     return event
