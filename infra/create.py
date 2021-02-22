@@ -21,7 +21,7 @@ def main():
         print("ERROR {}: {}".format(return_code, stderr))
 
     # AWS CLI 
-    print("-> AWS CLI...")
+    print("-> Deploying resources with AWS CLI...")
     ses_client = boto3.client('ses')
     try:
         check_if_template_exists = ses_client.get_custom_verification_email_template(
