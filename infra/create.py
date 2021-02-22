@@ -63,6 +63,20 @@ def main():
         UseCaseDescription='Educational newsletter',
         ProductionAccessEnabled=True
     )
+    print(
+        """
+        Now please go to your AWS Account and then Services -> Simple Email Service (SES) -> Sending Statistics ->
+        Your Account Details.  And fill out the form, for the description add this and an example of the first email newsletter you will use:
+
+        I am creating a small email newsletter service that will send lessons by emails to my students based on how frequently (in days) they request them.  
+        You can read more about the architecture of the service here: https://github.com/Maras13/Language_school_bot.
+
+        The signup will be handled through my wordpress website, and will also give the option to unsubscribe through the website.
+
+        The first email I will send to students is included below:\n\n
+        """
+    )
+    throwaway = input("Done?")
 
 if __name__ == "__main__":
     main()
