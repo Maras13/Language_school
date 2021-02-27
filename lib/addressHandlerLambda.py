@@ -3,6 +3,10 @@
 
 import json
 import boto3
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 TABLE_NAME = 'NatebotEmailTable'
 dynamo_table = boto3.resource('dynamodb').Table('NatebotEmailTable')
@@ -17,24 +21,25 @@ def lambda_handler(event, context):
 
         # Update item "days" field in DDB if exist already
         if exists(event['Email']):
-            
+            logger.info("Email already exists, updating...")
             response = dynamo_table.update_item(
                 Key={'Email': event['Email']},
-                UpdateExpression="set days = :d",
+                UpdateExpression="set Days = :d",
                 ExpressionAttributeValues={
-                    ':d': event['days']
+                    ':d': event['Days']
                 },
                 ReturnValues="UPDATED_NEW"
             )
+            logger.info("DDB Response: {}".format(response))
         # Otherwise insert item into DDB table, SES, and send verification email
         else:
-            # TODO: Move this to some Cloudwatch logging, return something useful
             response = dynamo_table.put_item(Item=event)
-
+            logger.info("Adding email to DDB: {}".format(response))
             response = ses.send_custom_verification_email(
                 EmailAddress=event['Email'],
                 TemplateName='VerificationTemplate'
             )
+            logger.info("Sent SES Verification Email: {}".format(response))
         return {
             "statusCode": 200,
             "body": json.dumps(response)
@@ -67,6 +72,7 @@ def validate_input(event):
         raise Exception("ERROR: {}".format("No Arguments passed! Please pass required arguments 'Email' and 'Days'"))
 
     event = event['queryStringParameters']
+    logger.info("Received event: {}".format(event))
 
     if "Email" not in event or "Days" not in event:
         raise Exception("ERROR: {}".format("Please pass required arguments 'Email' and 'Days'"))

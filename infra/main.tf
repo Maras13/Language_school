@@ -207,6 +207,16 @@ resource "aws_iam_role_policy_attachment" "NateBotEmailSenderRoleAttach2" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
+resource "aws_iam_role_policy_attachment" "NateBotEmailSenderRoleAttach3" {
+  role       = aws_iam_role.NateBotEmailSenderRole.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "NateBotEmailSenderRoleAttach4" {
+  role       = aws_iam_role.NateBotEmailSenderRole.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSESFullAccess"
+}
+
 data "archive_file" "NateBotEmailSenderZip" {
   source_file  = "${path.module}/../lib/emailSenderLambda.py"
   output_path = "${path.module}/../lib/emailSenderLambda.zip"
